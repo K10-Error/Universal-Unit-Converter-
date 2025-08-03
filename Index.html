@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Universal Unit Converter</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: #ffffff;
+      padding: 30px;
+      text-align: center;
+      border-radius: 25px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      animation: popin .8s ease;
+    }
+    @keyframes popin {
+      from { transform: scale(0.8); opacity:0; }
+      to   { transform: scale(1);   opacity:1; }
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 1.9rem;
+    }
+    .converter-card {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .input-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+    input, select {
+      padding: 10px 12px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      min-width: 120px;
+    }
+    button {
+      padding: 10px 25px;
+      font-size: 1rem;
+      border: none;
+      background: #ff7e5f;
+      color: white;
+      cursor: pointer;
+      border-radius: 15px;
+      transition: .3s;
+    }
+    button:hover {
+      background: #eb5757;
+    }
+    #result {
+      margin-top: 10px;
+      font-size: 1.2rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🌍 Universal Unit Converter</h1>
+  <div class="converter-card">
+    <label for="unit-type">Select Unit Type:</label>
+    <select id="unit-type">
+      <option value="length">Length</option>
+      <option value="weight">Weight</option>
+      <option value="temperature">Temperature</option>
+      <option value="area">Area</option>
+      <option value="volume">Volume</option>
+      <option value="speed">Speed</option>
+      <option value="time">Time</option>
+    </select>
+
+    <div class="input-group">
+      <input type="number" id="input-value" placeholder="Enter value">
+      <select id="from-unit"></select>
+      <span>⇄</span>
+      <select id="to-unit"></select>
+    </div>
+
+    <button onclick="convert()">Convert</button>
+    <div id="result"></div>
+  </div>
+</div>
+
+<script>
+  const unitType = document.getElementById("unit-type");
+  const fromUnit = document.getElementById("from-unit");
+  const toUnit = document.getElementById("to-unit");
+  const resultBox = document.getElementById("result");
+
+  const unitOptions = {
+    length: ["meters", "kilometers", "feet", "miles"],
+    weight: ["grams", "kilograms", "pounds", "ounces"],
+    temperature: ["celsius", "fahrenheit", "kelvin"],
+    area: ["sq.meters", "sq.kilometers", "sq.feet", "acres"],
+    volume: ["liters", "milliliters", "gallons", "cubic meters"],
+    speed: ["m/s", "km/h", "mph"],
+    time: ["seconds", "minutes", "hours", "days"]
+  };
+
+  function populateUnits(type) {
+    fromUnit.innerHTML = "";
+    toUnit.innerHTML = "";
+    unitOptions[type].forEach(u => {
+      let o1 = document.createElement("option");
+      let o2 = document.createElement("option");
+      o1.value = o2.value = u;
+      o1.textContent = o2.textContent = u;
+      fromUnit.append(o1);
+      toUnit.append(o2);
+    });
+    toUnit.selectedIndex = 1;
+  }
+
+  unitType.addEventListener("change", () => {
+    populateUnits(unitType.value);
+    resultBox.textContent = "";
+  });
+
+  function convert() {
+    const val = parseFloat(document.getElementById("input-value").value);
+    if(isNaN(val)){ resultBox.textContent = "Please enter a number."; return; }
+    const type = unitType.value, from = fromUnit.value, to = toUnit.value;
+    let result = val;
+
+    const lengthToMeter = {meters:1, kilometers:1000, feet:0.3048, miles:1609.34};
+    const weightToGram = {grams:1, kilograms:1000, pounds:453.592, ounces:28.3495};
+    const areaToSqm = {"sq.meters":1, "sq.kilometers":1e6, "sq.feet":0.092903, acres:4046.86};
+    const volumeToLiter = {liters:1, milliliters:0.001, gallons:3.78541, "cubic meters":1000};
+    const speedToMS = {"m/s":1, "km/h":0.277778, mph:0.44704};
+    const timeToSec = {seconds:1, minutes:60, hours:3600, days:86400};
+
+    if(type==="length") result = val*lengthToMeter[from]/lengthToMeter[to];
+    else if(type==="weight") result = val*weightToGram[from]/weightToGram[to];
+    else if(type==="area") result = val*areaToSqm[from]/areaToSqm[to];
+    else if(type==="volume") result = val*volumeToLiter[from]/volumeToLiter[to];
+    else if(type==="speed") result = val*speedToMS[from]/speedToMS[to];
+    else if(type==="time") result = val*timeToSec[from]/timeToSec[to];
+    else if(type==="temperature"){
+      if(from==="celsius"&&to==="fahrenheit") result = val*9/5+32;
+      else if(from==="fahrenheit"&&to==="celsius") result=(val-32)*5/9;
+      else if(from==="celsius"&&to==="kelvin") result = val+273.15;
+      else if(from==="kelvin"&&to==="celsius") result = val-273.15;
+      else if(from==="fahrenheit"&&to==="kelvin") result=(val-32)*5/9+273.15;
+      else if(from==="kelvin"&&to==="fahrenheit") result=(val-273.15)*9/5+32;
+    }
+
+    resultBox.textContent = `${val} ${from} = ${result.toFixed(4)} ${to}`;
+  }
+
+  populateUnits(unitType.value);
+</script>
+
+</body>
+</html>
